@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🏰 Hogwarts House Championship</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+</head>
+<body class="wizard-theme">
+    <!-- Decors (pointer-events: none) -->
+    <div class="vfx-container">
+        <div class="fog"></div>
+        <div class="stars"></div>
+        <div id="particles"></div>
+        <div id="candles"></div>
+    </div>
+
+    <div id="loading-overlay" class="vfx-overlay">
+        <div class="magic-circle-loader"></div>
+        <p class="cinzel gold-shimmer">Revelatio...</p>
+    </div>
+    
+    <!-- Entrance Hall -->
+    <div id="login-screen" class="scene active">
+        <div class="content-box">
+            <div class="large-crest"></div>
+            <h1 class="metallic-gold">HOGWARTS<br><small>House Championship</small></h1>
+            
+            <div class="parchment-form">
+                <div class="magic-input-wrap">
+                    <input type="text" id="nickname-input" placeholder="마법사 성함을 기입하십시오" maxlength="12">
+                </div>
+                <button id="btn-join" class="magic-book-btn" onclick="joinGame()">
+                    <span class="cinzel">입 학 하 기</span>
+                </button>
+            </div>
+
+            <div class="footer-actions">
+                <button class="ghost-btn" onclick="toggleAdmin()">기록실 접근</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Great Hall -->
+    <div id="game-screen" class="scene hidden">
+        <header class="top-nav">
+            <div class="wizard-id parchment-texture">
+                <div id="player-crest" class="mini-crest"></div>
+                <div class="info">
+                    <span id="stat-name" class="cinzel">WIZARD</span>
+                    <span id="stat-role" class="tag">STUDENT</span>
+                </div>
+            </div>
+            <div class="game-meta parchment-texture">
+                <span id="stat-house">그리핀도르</span>
+                <span id="stat-day" class="day-tag">Day 1</span>
+            </div>
+        </header>
+        
+        <main class="main-hall">
+            <aside class="pillar-section">
+                <div id="house-Gryffindor" class="pillar gry">
+                    <div class="crest"></div>
+                    <div class="data"><span class="h-name">GRYFFINDOR</span><span class="h-score points-val">0</span></div>
+                    <div class="glow"></div>
+                </div>
+                <div id="house-Slytherin" class="pillar sly">
+                    <div class="crest"></div>
+                    <div class="data"><span class="h-name">SLYTHERIN</span><span class="h-score points-val">0</span></div>
+                    <div class="glow"></div>
+                </div>
+                <div id="house-Ravenclaw" class="pillar rav">
+                    <div class="crest"></div>
+                    <div class="data"><span class="h-name">RAVENCLAW</span><span class="h-score points-val">0</span></div>
+                    <div class="glow"></div>
+                </div>
+                <div id="house-Hufflepuff" class="pillar huf">
+                    <div class="crest"></div>
+                    <div class="data"><span class="h-name">HUFFLEPUFF</span><span class="h-score points-val">0</span></div>
+                    <div class="glow"></div>
+                </div>
+                <div id="de-team-info" class="hidden dark-pillar">
+                    <div class="dark-mark"></div>
+                    <div class="secret-pts">SECRET POWER: <span id="de-team-score">0</span></div>
+                </div>
+            </aside>
+
+            <section class="activity-chamber">
+                <h2 class="cinzel chamber-title">Academic Schedule</h2>
+                <div class="professor-list">
+                    <div class="prof-card" onclick="openGame('timing')">
+                        <div class="prof-circle"></div>
+                        <div class="prof-icon">🧪</div>
+                        <div class="meta"><span>화린 교수</span><small>타이밍 수련</small></div>
+                    </div>
+                    <div class="prof-card" onclick="openGame('reaction')">
+                        <div class="prof-circle"></div>
+                        <div class="prof-icon">🧹</div>
+                        <div class="meta"><span>레네 교수</span><small>순발력 강화</small></div>
+                    </div>
+                    <div class="prof-card" onclick="openGame('focus')">
+                        <div class="prof-circle"></div>
+                        <div class="prof-icon">🛡️</div>
+                        <div class="meta"><span>설링 교수</span><small>정신 집중</small></div>
+                    </div>
+                    <div class="prof-card" onclick="openGame('creature')">
+                        <div class="prof-circle"></div>
+                        <div class="prof-icon">🐉</div>
+                        <div class="meta"><span>리쵸 교수</span><small>신화동물 탐구</small></div>
+                    </div>
+                </div>
+                
+                <div class="tools-grid">
+                    <div class="book-prophecy" onclick="buyHint()">
+                        <div class="book-spine"></div>
+                        <span class="cinzel">The Prophecy</span>
+                    </div>
+                    <button class="ministry-report-btn" onclick="openReport()">🚩 고발하기</button>
+                </div>
+
+                <div id="de-panel" class="hidden dark-council">
+                    <h3 class="cinzel">Dark Arts Council</h3>
+                    <button class="dark-act-btn" onclick="deSteal()">🩸 정기 강탈</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals (Top Z-Index) -->
+    <div id="ministry-modal" class="modal-overlay hidden">
+        <div class="letter parchment-texture">
+            <div class="letter-seal"></div>
+            <h2 class="cinzel">Ministry of Magic</h2>
+            <p id="notice-msg" class="letter-text"></p>
+            <button class="letter-btn" onclick="closeNotice()">Understood</button>
+        </div>
+    </div>
+
+    <div id="prophecy-modal" class="modal-overlay hidden">
+        <div class="prophecy-scroll">
+            <h3 class="cinzel">Fate Revealed</h3>
+            <div id="prophecy-text" class="typewriter"></div>
+            <button class="close-prophecy" onclick="closeProphecy()">기록 닫기</button>
+        </div>
+    </div>
+
+    <div id="admin-panel" class="modal-overlay hidden">
+        <div class="grand-scroll parchment-texture">
+            <div class="header">
+                <h2 class="cinzel">Administrative Chamber</h2>
+                <button class="x-close" onclick="toggleAdmin()">×</button>
+            </div>
+            <div class="body">
+                <input type="password" id="admin-pass" class="wizard-input" placeholder="인가 주문 (sein0903)">
+                <div class="admin-grid">
+                    <div class="admin-box">
+                        <h3>⚖️ 밸런스 조정</h3>
+                        <div class="inputs">
+                            <label>힌트 가격</label><input type="number" id="cfg-hint-price">
+                            <label>기본 점수</label><input type="number" id="cfg-game-points">
+                        </div>
+                        <button class="admin-btn-gold" onclick="applyBalance()">조정안 적용</button>
+                    </div>
+                    <div class="admin-box">
+                        <h3>🌍 세계 통제</h3>
+                        <div class="ctrls">
+                            <button class="ctrl-start" onclick="adminAction('startGame')">학기 시작</button>
+                            <button class="ctrl-next" onclick="adminAction('nextDay')">다음 날</button>
+                            <button class="ctrl-reset" onclick="adminAction('reset')">기록 말소</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-box full">
+                    <h3>🧙 마법사 명단</h3>
+                    <div id="admin-player-list" class="admin-players"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-overlay" class="modal-overlay hidden"><div class="chamber" id="modal-content"></div></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
